@@ -1,0 +1,17 @@
+<div class="app-content-header">
+  <h1 class="app-content-headerText">Medicine List</h1>
+  <button class="app-content-headerButton" id="add-stock-button">Add Stock Entry</button>
+</div>
+<div id="popupForm" class="popup-form">
+  <div class="popup-form-content">
+    <span class="close-btn" onclick="closePopup()">&times;</span>
+    <h2>Add Stock Entries</h2>
+    <form id="medicineForm" action="/add-stocks" method="POST">
+      <div id="entries-container"></div>
+      <button type="button" id="add-entry-btn">Add Entry</button>
+      <button type="submit">Submit All Entries</button>
+    </form>
+  </div>
+</div>
+
+

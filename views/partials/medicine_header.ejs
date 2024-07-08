@@ -1,0 +1,40 @@
+<div class="app-content-header">
+  <h1 class="app-content-headerText">Medicine List</h1>
+  <button class="app-content-headerButton" id="add-medicine-button">Add medicine</button>
+</div>
+<div id="popupForm" class="popup-form">
+  <div class="popup-form-content">
+      <span class="close-btn" onclick="closePopup()">&times;</span>
+      <h2>Add Medicine</h2>
+      <form id="medicineForm" action="/add-medicine" method="POST">
+          <label for="medicine_name">Medicine Name:</label>
+          <input type="text" id="medicine_name" name="medicine_name" required>
+          
+          <label for="brand_name">Brand Name:</label>
+          <input type="text" id="brand_name" name="brand_name" required>
+          
+          <label for="manufacturer_name">Manufacturer Name:</label>
+          <input type="text" id="manufacturer_name" name="manufacturer_name" required>
+          
+          <label for="constituents">Constituents:</label>
+          <input type="text" id="constituents" name="constituents" required>
+          
+          <label for="pack_size_label">Pack Size Label:</label>
+          <input type="text" id="pack_size_label" name="pack_size_label" required>
+          
+          <button type="submit">Add Medicine</button>
+      </form>
+
+      <hr>
+
+      <h2>Upload Excel</h2>
+      <form id="uploadForm" action="/upload-medicine" method="POST" enctype="multipart/form-data">
+          <label for="excel-file">Upload Excel File:</label>
+          <input type="file" id="excel-file" name="excel-file" accept=".xlsx, .xls" required>
+          <button type="submit">Upload</button>
+      </form>
+  </div>
+</div>
+
+
+
