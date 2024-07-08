@@ -5,90 +5,95 @@
   <meta charset="UTF-8">
   <title>PHC - Stock Management</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
-  <link rel="stylesheet" href="css/stock_entry.css">
+  <link rel="stylesheet" href="css/patient.css">
 </head>
 
 <body>
   <div class="app-container">
     <%- include('partials/sidebar') %>
       <div class="app-content">
-        <%- include('partials/stock_header') %>
-
+        <%- include('partials/patient_header') %>
           <div class="app-content-actions">
-            <form action="/stock" method="get">
+            <form action="/patient" method="get">
               <input class="search-bar" id="search-bar" name="query" placeholder="Search..." type="text"
                 value="<%= searchQuery %>">
             </form>
             <div class="app-content-actions-wrapper">
             </div>
           </div>
-          <div class="stocks-area-wrapper tableView">
-            <div class="stocks-header">
-              <div class="stock-cell category">Brand Name<button class="sort-button">
+          <div class="patients-area-wrapper tableView">
+            <div class="patients-header">
+              <div class="patient-cell patient-id">Patient Id<button class="sort-button">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512">
                     <path fill="currentColor"
                       d="M496.1 138.3L375.7 17.9c-7.9-7.9-20.6-7.9-28.5 0L226.9 138.3c-7.9 7.9-7.9 20.6 0 28.5 7.9 7.9 20.6 7.9 28.5 0l85.7-85.7v352.8c0 11.3 9.1 20.4 20.4 20.4 11.3 0 20.4-9.1 20.4-20.4V81.1l85.7 85.7c7.9 7.9 20.6 7.9 28.5 0 7.9-7.8 7.9-20.6 0-28.5zM287.1 347.2c-7.9-7.9-20.6-7.9-28.5 0l-85.7 85.7V80.1c0-11.3-9.1-20.4-20.4-20.4-11.3 0-20.4 9.1-20.4 20.4v352.8l-85.7-85.7c-7.9-7.9-20.6-7.9-28.5 0-7.9 7.9-7.9 20.6 0 28.5l120.4 120.4c7.9 7.9 20.6 7.9 28.5 0l120.4-120.4c7.8-7.9 7.8-20.7-.1-28.5z" />
                   </svg>
                 </button></div>
-              <div class="stock-cell status-cell">Expiry Date<button class="sort-button">
+              <div class="patient-cell patient-name">Patient Name<button class="sort-button">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512">
                     <path fill="currentColor"
                       d="M496.1 138.3L375.7 17.9c-7.9-7.9-20.6-7.9-28.5 0L226.9 138.3c-7.9 7.9-7.9 20.6 0 28.5 7.9 7.9 20.6 7.9 28.5 0l85.7-85.7v352.8c0 11.3 9.1 20.4 20.4 20.4 11.3 0 20.4-9.1 20.4-20.4V81.1l85.7 85.7c7.9 7.9 20.6 7.9 28.5 0 7.9-7.8 7.9-20.6 0-28.5zM287.1 347.2c-7.9-7.9-20.6-7.9-28.5 0l-85.7 85.7V80.1c0-11.3-9.1-20.4-20.4-20.4-11.3 0-20.4 9.1-20.4 20.4v352.8l-85.7-85.7c-7.9-7.9-20.6-7.9-28.5 0-7.9 7.9-7.9 20.6 0 28.5l120.4 120.4c7.9 7.9 20.6 7.9 28.5 0l120.4-120.4c7.8-7.9 7.8-20.7-.1-28.5z" />
                   </svg>
                 </button></div>
-              <div class="stock-cell supplier">Supplier<button class="sort-button">
+              <div class="patient-cell status-cell visit-date">Visit Date<button class="sort-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512">
+                    <path fill="currentColor"
+                      d="M496.1 138.3L375.7 17.9c-7.9-7.9-20.6-7.9-28.5 0L226.9 138.3c-7.9 7.9-7.9 20.6 0 28.5 7.9 7.9 20.6 7.9 28.5 0l85.7-85.7v352.8c0 11.3 9.1 20.4 20.4 20.4 11.3 0 20.4-9.1 20.4-20.4V81.1l85.7 85.7c7.9 7.9 20.6 7.9 28.5 0 7.9-7.8 7.9-20.6 0-28.5zM287.1 347.2c-7.9-7.9-20.6-7.9-28.5 0l-85.7 85.7V80.1c0-11.3-9.1-20.4-20.4-20.4-11.3 0-20.4 9.1-20.4 20.4v352.8l-85.7-85.7c-7.9-7.9-20.6-7.9-28.5 0-7.9 7.9-7.9 20.6 0 28.5l120.4 120.4c7.9 7.9 20.6 7.9 28.5 0l120.4-120.4c7.8-7.9 7.8-20.7-.1-28.5z" />
+                  </svg>
+                </button></div>
+              <div class="patient-cell doctor">Doctor Name<button class="sort-button">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512">
                     <path fill="currentColor"
                       d="M496.1 138.3L375.7 17.9c-7.9-7.9-20.6-7.9-28.5 0L226.9 138.3c-7.9 7.9-7.9 20.6 0 28.5 7.9 7.9 20.6 7.9 28.5 0l85.7-85.7v352.8c0 11.3 9.1 20.4 20.4 20.4 11.3 0 20.4-9.1 20.4-20.4V81.1l85.7 85.7c7.9 7.9 20.6 7.9 28.5 0 7.9-7.8 7.9-20.6 0-28.5zM287.1 347.2c-7.9-7.9-20.6-7.9-28.5 0l-85.7 85.7V80.1c0-11.3-9.1-20.4-20.4-20.4-11.3 0-20.4 9.1-20.4 20.4v352.8l-85.7-85.7c-7.9-7.9-20.6-7.9-28.5 0-7.9 7.9-7.9 20.6 0 28.5l120.4 120.4c7.9 7.9 20.6 7.9 28.5 0l120.4-120.4c7.8-7.9 7.8-20.7-.1-28.5z" />
                   </svg>
                 </button>
               </div>
-              <div class="stock-cell quantity">Quantity<button class="sort-button">
+              <div class="patient-cell prescription">View Prescription<button class="sort-button">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512">
                     <path fill="currentColor"
                       d="M496.1 138.3L375.7 17.9c-7.9-7.9-20.6-7.9-28.5 0L226.9 138.3c-7.9 7.9-7.9 20.6 0 28.5 7.9 7.9 20.6 7.9 28.5 0l85.7-85.7v352.8c0 11.3 9.1 20.4 20.4 20.4 11.3 0 20.4-9.1 20.4-20.4V81.1l85.7 85.7c7.9 7.9 20.6 7.9 28.5 0 7.9-7.8 7.9-20.6 0-28.5zM287.1 347.2c-7.9-7.9-20.6-7.9-28.5 0l-85.7 85.7V80.1c0-11.3-9.1-20.4-20.4-20.4-11.3 0-20.4 9.1-20.4 20.4v352.8l-85.7-85.7c-7.9-7.9-20.6-7.9-28.5 0-7.9 7.9-7.9 20.6 0 28.5l120.4 120.4c7.9 7.9 20.6 7.9 28.5 0l120.4-120.4c7.8-7.9 7.8-20.7-.1-28.5z" />
                   </svg>
                 </button>
               </div>
-              <div class="stock-cell entry-date">Entry Date<button class="sort-button">
+              <!-- <div class="patient-cell entry-date">Entry Date<button class="sort-button">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512">
                     <path fill="currentColor"
                       d="M496.1 138.3L375.7 17.9c-7.9-7.9-20.6-7.9-28.5 0L226.9 138.3c-7.9 7.9-7.9 20.6 0 28.5 7.9 7.9 20.6 7.9 28.5 0l85.7-85.7v352.8c0 11.3 9.1 20.4 20.4 20.4 11.3 0 20.4-9.1 20.4-20.4V81.1l85.7 85.7c7.9 7.9 20.6 7.9 28.5 0 7.9-7.8 7.9-20.6 0-28.5zM287.1 347.2c-7.9-7.9-20.6-7.9-28.5 0l-85.7 85.7V80.1c0-11.3-9.1-20.4-20.4-20.4-11.3 0-20.4 9.1-20.4 20.4v352.8l-85.7-85.7c-7.9-7.9-20.6-7.9-28.5 0-7.9 7.9-7.9 20.6 0 28.5l120.4 120.4c7.9 7.9 20.6 7.9 28.5 0l120.4-120.4c7.8-7.9 7.8-20.7-.1-28.5z" />
                   </svg>
                 </button>
-              </div>
+              </div> -->
 
             </div>
-            <% for(let stock of item) {%>
-              <div class="stocks-row">
-                <div class="stock-cell category"><span class="cell-label">Brand:</span>
-                  <%= stock.brand_name%>
+            <% for(let patient of item) {%>
+              <div class="patients-row">
+                <div class="patient-cell patient-id"><span class="cell-label">Patient Id:</span>
+                  <%= patient.user_id_id%>
                 </div>
-                <div class="stock-cell status-cell">
-                  <span class="cell-label">Expiry Date:</span>
+                <div class="patient-cell status-cell visit-date">
+                  <span class="cell-label">Visit Date:</span>
                   <span class="status active">
-                    <%= stock.expiry_date%>
+                    <%= patient.date%>
                   </span>
                 </div>
-                <div class="stock-cell pack-size"><span class="cell-label">pack-size:</span>
-                  <%= stock.supplier %>
+                <div class="patient-cell patient-name"><span class="cell-label">pack-size:</span>
+                  <%= patient.patient_name %>
                 </div>
-                <div class="stock-cell pack-size"><span class="cell-label">pack-size:</span>
-                  <%= stock.quantity %>
+                <div class="patient-cell doctor"><span class="cell-label">Doctor:</span>
+                  <%= patient.doctor_name %>
                 </div>
-                <div class="stock-cell pack-size"><span class="cell-label">pack-size:</span>
-                  <%= stock.date %>
+                <div class="patient-cell prescription"><span class="cell-label">View Prescription:</span>
+                  View Prescription
                 </div>
               </div>
               <% } %>
           </div>
           <div class="pagination">
             <% if (currentPage>1) { %>
-              <a href="/stock?page=<%= currentPage - 1 %>&query=<%= searchQuery %>">Prev</a>
+              <a href="/patient?page=<%= currentPage - 1 %>&query=<%= searchQuery %>">Prev</a>
               <% } %>
                 <span>Page <%= currentPage %> of <%= totalPages %></span>
                 <% if (currentPage < totalPages) { %>
-                  <a href="/stock?page=<%= currentPage + 1 %>&query=<%= searchQuery %>">Next</a>
+                  <a href="/patient?page=<%= currentPage + 1 %>&query=<%= searchQuery %>">Next</a>
                   <% } %>
           </div>
       </div>

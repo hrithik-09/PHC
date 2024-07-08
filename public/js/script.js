@@ -22,6 +22,51 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const getCellValue = (row, index) => row.children[index].innerText || row.children[index].textContent;
+
+  const comparer = (index, asc) => (a, b) => ((v1, v2) =>
+    v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+  )(getCellValue(asc ? a : b, index), getCellValue(asc ? b : a, index));
+
+  document.querySelectorAll('.sort-button').forEach(button => {
+    button.addEventListener('click', () => {
+      const table = button.closest('.stocks-area-wrapper');
+      const rows = Array.from(table.querySelectorAll('.stocks-row'));
+      const index = Array.from(button.closest('.stocks-header').children).indexOf(button.parentElement);
+      const asc = !button.classList.contains('asc');
+
+      rows.sort(comparer(index, asc));
+      rows.forEach(row => table.appendChild(row));
+
+      button.classList.toggle('asc', asc);
+      button.classList.toggle('desc', !asc);
+    });
+  });
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const getCellValue = (row, index) => row.children[index].innerText || row.children[index].textContent;
+
+  const comparer = (index, asc) => (a, b) => ((v1, v2) =>
+    v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+  )(getCellValue(asc ? a : b, index), getCellValue(asc ? b : a, index));
+
+  document.querySelectorAll('.sort-button').forEach(button => {
+    button.addEventListener('click', () => {
+      const table = button.closest('.patients-area-wrapper');
+      const rows = Array.from(table.querySelectorAll('.patients-row'));
+      const index = Array.from(button.closest('.patients-header').children).indexOf(button.parentElement);
+      const asc = !button.classList.contains('asc');
+
+      rows.sort(comparer(index, asc));
+      rows.forEach(row => table.appendChild(row));
+
+      button.classList.toggle('asc', asc);
+      button.classList.toggle('desc', !asc);
+    });
+  });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
   const searchForm = document.getElementById('search-form');
   const searchBar = document.getElementById('search-bar');
@@ -39,6 +84,50 @@ document.addEventListener('DOMContentLoaded', function() {
         const newmedicinesRows = doc.getElementById('medicines-rows').innerHTML;
         const paginationControls = doc.querySelector('.pagination-controls').innerHTML;
         medicinesRows.innerHTML = newmedicinesRows;
+        document.querySelector('.pagination-controls').innerHTML = paginationControls;
+      });
+  });
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  const searchForm = document.getElementById('search-form');
+  const searchBar = document.getElementById('search-bar');
+  const patientsArea = document.getElementById('patients-area');
+  const patientsRows = document.getElementById('patients-rows');
+
+  searchForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const query = searchBar.value;
+    fetch(`/patient?query=${encodeURIComponent(query)}`)
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newpatientsRows = doc.getElementById('patients-rows').innerHTML;
+        const paginationControls = doc.querySelector('.pagination-controls').innerHTML;
+        patientsRows.innerHTML = newpatientsRows;
+        document.querySelector('.pagination-controls').innerHTML = paginationControls;
+      });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const searchForm = document.getElementById('search-form');
+  const searchBar = document.getElementById('search-bar');
+  const stocksArea = document.getElementById('stocks-area');
+  const stocksRows = document.getElementById('stocks-rows');
+  searchForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const query = searchBar.value;
+    fetch(`/stock?query=${encodeURIComponent(query)}`)
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newpatientsRows = doc.getElementById('stocks-rows').innerHTML;
+        const paginationControls = doc.querySelector('.pagination-controls').innerHTML;
+        patientsRows.innerHTML = newpatientsRows;
         document.querySelector('.pagination-controls').innerHTML = paginationControls;
       });
   });
@@ -108,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.fetchSuggestions = function(input) {
     const brandName = input.value;
-    if (brandName.length > 1) {
+    if (brandName.length > 0) {
       fetch(`/autocomplete?brand_name=${brandName}`)
         .then(response => response.json())
         .then(data => {
@@ -129,6 +218,22 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         });
     }
+    else
+      {
+          const suggestions = input.nextElementSibling;
+          suggestions.innerHTML = '';
+          const suggestion = document.createElement('div');
+          suggestion.innerText = item.brand_name;
+          suggestion.onclick = () => {
+          input.value = item.brand_name;
+          const entryRow = input.closest('.entry-row');
+          entryRow.querySelector('input[name="medicine_name[]"]').value = '';
+          entryRow.querySelector('input[name="manufacturer_name[]"]').value = '';
+          entryRow.querySelector('input[name="pack_size_label[]"]').value = '';
+          suggestions.innerHTML = '';
+          };
+          suggestions.appendChild(suggestion);
+      }
   };
 
   createEntryRow(); // Create the first entry row

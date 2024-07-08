@@ -72,6 +72,7 @@ app.get("/medicine", async(req, res) => {
   }
 });
 
+
 app.get("/stock", async(req, res) => {
   // console.log(req.path);
   const page = parseInt(req.query.page) || 1; 
@@ -263,6 +264,92 @@ app.post('/upload-medicine', upload.single('excel-file'), async (req, res) => {
   } catch (error) {
     console.error('Error uploading file:', error);
     res.status(500).send('Error uploading file');
+  }
+});
+app.post('/upload-stock', upload.single('excel-file'), async (req, res) => {
+  try {
+    const fileBuffer = req.file.buffer;
+    const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rows = xlsx.utils.sheet_to_json(worksheet);
+
+    for (const row of rows) {
+      
+        const { medicine_name, brand_name, manufacturer_name, pack_size_label,quantity, expiry_date } = row;
+        const res1 = await db.query(
+          "SELECT id FROM health_center_medicine WHERE brand_name = $1 AND medicine_name = $2 AND manufacturer_name = $3 AND pack_size_label = $4",
+          [brand_name, medicine_name, manufacturer_name, pack_size_label]
+        );
+        const id = res1.rows[0].id;
+  
+        const result = await db.query(
+          'INSERT INTO health_center_stock_entry (quantity, supplier, expiry_date, medicine_id_id, date) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+          [quantity, supplier, expiry_date, id, entry_date]
+        );
+  
+        const newId = result.rows[0].id;
+        await db.query(
+          'INSERT INTO health_center_stock (quantity, expiry_date, stock_id_id, medicine_id_id) VALUES ($1, $2, $3, $4)',
+          [quantity, expiry_date, newId, id]
+        );
+
+    
+
+    res.redirect('/stock'); // Redirect to the homepage or another relevant page
+  }
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).send('Error uploading file');
+  }
+});
+
+
+app.get("/patient", async(req, res) => {
+  // console.log(req.path);
+  const page = parseInt(req.query.page) || 1; 
+  const limit = parseInt(req.query.limit) || 10; 
+  const offset = (page - 1) * limit;
+  const searchQuery = req.query.query || ''; 
+  console.log(searchQuery);
+  try {
+    let queryText = "SELECT COUNT(*) FROM health_center_prescription p JOIN health_center_doctor d ON p.doctor_id_id=d.id";
+    let queryParams = [];
+    if (searchQuery) {
+      queryText += " WHERE user_id_id ILIKE $1 OR patient_name ILIKE $1 OR doctor_name ILIKE $1 or date::text ILIKE $1";
+      queryParams.push(`%${searchQuery}%`);
+    }
+    const totalResult = await db.query(queryText, queryParams);
+    const totalItems = parseInt(totalResult.rows[0].count);
+
+    queryText = "SELECT * FROM health_center_prescription p JOIN health_center_doctor d ON p.doctor_id_id=d.id";
+    queryParams = [limit, offset];
+    if (searchQuery) {
+      queryText += " WHERE user_id_id ILIKE $3 OR patient_name ILIKE $3 OR doctor_name ILIKE $3 or date::text ILIKE $3 ";
+      queryParams.push(`%${searchQuery}%`);
+    }
+    queryText += " LIMIT $1 OFFSET $2";
+    const result = await db.query(queryText, queryParams);
+    const items = result.rows.map(item => ({
+      user_id_id:item.user_id_id,
+      patient_name:item.patient_name,
+      doctor_name:item.doctor_name,
+      date: format(new Date(item.date), 'yyyy-MM-dd'),
+    }));
+    // console.log(items);
+    // Calculate total pages
+    const totalPages = Math.ceil(totalItems / limit);
+    res.render("patient.ejs", {
+      item: items,
+      limit: limit,
+      currentPage: page,
+      totalPages: totalPages,
+      searchQuery: searchQuery,
+      path:req.path
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Server Error");
   }
 });
 

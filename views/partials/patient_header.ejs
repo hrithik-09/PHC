@@ -1,0 +1,22 @@
+<div class="app-content-header">
+  <h1 class="app-content-headerText">Patient Log</h1>
+  <button class="app-content-headerButton" id="add-stock-button">Add Patient Log</button>
+</div>
+<div id="popupForm" class="popup-form">
+  <div class="popup-form-content">
+    <span class="close-btn" onclick="closePopup()">&times;</span>
+    <h2>Add Patient Entries</h2>
+    <form id="medicineForm" action="/add-stocks" method="POST">
+      <div id="entries-container"></div>
+      <button type="button" id="add-entry-btn">Add Entry</button>
+      <button type="submit">Submit All Entries</button>
+    </form>
+    <hr>
+    <h2>Upload Excel</h2>
+    <form id="uploadForm" action="/upload-medicine" method="POST" enctype="multipart/form-data">
+      <label for="excel-file">Upload Excel File:</label>
+      <input type="file" id="excel-file" name="excel-file" accept=".xlsx, .xls" required>
+      <button type="submit">Upload</button>
+    </form>
+  </div>
+</div>

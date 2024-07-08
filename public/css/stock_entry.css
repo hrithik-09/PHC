@@ -246,7 +246,7 @@ body {
 /* Header Ends */
 
 
-.medicines-area-wrapper {
+.stocks-area-wrapper {
   width: 100%;
   max-height: 100%;
   overflow: auto;
@@ -259,7 +259,7 @@ body {
 
 /* Header Styles */
 
-.medicine-cell {
+.stock-cell {
   flex: 1;
   padding: 8px;
   color: #333;
@@ -269,7 +269,7 @@ body {
   align-items: center;
   justify-content: center;
 }
-.medicines-header {
+.stocks-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -283,7 +283,7 @@ body {
 
 
 
-.tableView .medicines-header .medicine-cell {
+.tableView .stocks-header .stock-cell {
   flex: 1;
   text-align: center;
   /* font-weight: bold; */
@@ -291,12 +291,12 @@ body {
   color: white;
 }
 
-.tableView .medicines-header .sort-button {
+.tableView .stocks-header .sort-button {
   margin-left: 8px;
 }
 
 /* Row Styles */
-.tableView .medicines-row {
+.tableView .stocks-row {
   display: flex;
   align-items: center;
   border-radius: 8px;
@@ -305,14 +305,14 @@ body {
   transition: background-color 0.3s ease;
 }
 
-.tableView .medicines-row:hover {
+.tableView .stocks-row:hover {
   background-color: #f0f8ff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 
 
-.tableView .medicine-cell img {
+.tableView .stock-cell img {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -388,7 +388,7 @@ body {
   display: none;
 }
 
-/* add medicine button style */
+/* add stock button style */
 /* Popup Form Styles */
 .popup-form {
   display: none;
@@ -436,7 +436,7 @@ body {
 }
 
 .popup-form-content input[type="text"],
-.popup-form-content input[type="date"] {
+.popup-form-content input[type="date"],.popup-form-content input[type="file"] {
   width: 100%;
   padding: 10px;
   margin-bottom: 15px;
