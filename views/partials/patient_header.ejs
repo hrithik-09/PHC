@@ -6,14 +6,14 @@
   <div class="popup-form-content">
     <span class="close-btn" onclick="closePopup()">&times;</span>
     <h2>Add Patient Entries</h2>
-    <form id="medicineForm" action="/add-stocks" method="POST">
+    <form id="patientForm" action="/add-patient-log" method="POST">
       <div id="entries-container"></div>
-      <button type="button" id="add-entry-btn">Add Entry</button>
+      <button type="button" id="add-patient-entry-btn">Add Entry</button>
       <button type="submit">Submit All Entries</button>
     </form>
     <hr>
     <h2>Upload Excel</h2>
-    <form id="uploadForm" action="/upload-medicine" method="POST" enctype="multipart/form-data">
+    <form id="uploadForm" action="/upload-patient" method="POST" enctype="multipart/form-data">
       <label for="excel-file">Upload Excel File:</label>
       <input type="file" id="excel-file" name="excel-file" accept=".xlsx, .xls" required>
       <button type="submit">Upload</button>

@@ -55,14 +55,6 @@
                   </svg>
                 </button>
               </div>
-              <!-- <div class="patient-cell entry-date">Entry Date<button class="sort-button">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512">
-                    <path fill="currentColor"
-                      d="M496.1 138.3L375.7 17.9c-7.9-7.9-20.6-7.9-28.5 0L226.9 138.3c-7.9 7.9-7.9 20.6 0 28.5 7.9 7.9 20.6 7.9 28.5 0l85.7-85.7v352.8c0 11.3 9.1 20.4 20.4 20.4 11.3 0 20.4-9.1 20.4-20.4V81.1l85.7 85.7c7.9 7.9 20.6 7.9 28.5 0 7.9-7.8 7.9-20.6 0-28.5zM287.1 347.2c-7.9-7.9-20.6-7.9-28.5 0l-85.7 85.7V80.1c0-11.3-9.1-20.4-20.4-20.4-11.3 0-20.4 9.1-20.4 20.4v352.8l-85.7-85.7c-7.9-7.9-20.6-7.9-28.5 0-7.9 7.9-7.9 20.6 0 28.5l120.4 120.4c7.9 7.9 20.6 7.9 28.5 0l120.4-120.4c7.8-7.9 7.8-20.7-.1-28.5z" />
-                  </svg>
-                </button>
-              </div> -->
-
             </div>
             <% for(let patient of item) {%>
               <div class="patients-row">
@@ -81,12 +73,68 @@
                 <div class="patient-cell doctor"><span class="cell-label">Doctor:</span>
                   <%= patient.doctor_name %>
                 </div>
-                <div class="patient-cell prescription"><span class="cell-label">View Prescription:</span>
-                  View Prescription
-                </div>
+                <div class="patient-cell prescription"><span class="cell-label">View Prescription:</span><button class="view-prescription-btn" data-id="<%= patient.prescription_id %>">View Prescription</button></div>
               </div>
               <% } %>
           </div>
+          <div id="prescriptionPopup" class="pres_popup">
+            <div class="prescription-popup-content">
+              <span class="prescription-close-btn">&times;</span>
+              <div class="prescription-header">
+                <div class="logo"></div>
+                <div class="prescription-title">
+                  <div class="main-title">Primary Health Center</div>
+                  <div class="sub-title">PDPM IIITDM Jabalpur</div>
+                </div>
+              </div>
+              
+              <div class="prescription-details">
+                <div class="doctor-details"></div>
+                <div class="patient-details"></div>
+                <div class="patient-age-details"></div>
+                <table class="medicines-table">
+                  <thead>
+                    <tr>
+                      <th>Medicine Name</th>
+                      <th>Quantity</th>
+                      <th>Days</th>
+                      <th>Times</th>
+                      <th>Revoked Status</th>
+                      <th>Revoked Date</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <button class="print-btn">Print Prescription</button>
+              <button class="add-more-medicine-btn">Add Medicine</button>
+            </div>
+          </div>
+          <div id="addMedicinePopup" class="add-medicine-popup">
+            <div class="add-medicine-popup-content">
+              <span class="add-medicine-close-btn">&times;</span>
+              <h2>Add Medicine</h2>
+              <div class="medicine-entry-container">
+                <div class="medicine-row">
+                  <label for="new_medicine_name">Medicine Name:</label>
+                  <input type="text" class="new_medicine_name" name="new_medicine_name" onkeyup="fetchextraMedSuggestions(this)" required>
+                  <div class="suggestions_extra"></div>
+                  <div class="inline-fields">
+                    <input type="text" class="new_manufacturer_name" placeholder="Manufacturer" name="new_manufacturer_name" required>
+                    <input type="text" class="new_pack_size_label" placeholder="Pack Size Label" name="new_pack_size_label" required>
+                  </div>
+                  <div class="inline-fields">
+                    <input type="text" placeholder="Quantity" name="new_quantity" required>
+                    <input type="text" placeholder="Days" name="new_days" required>
+                    <input type="text" placeholder="Times" name="new_times" required>
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" class="prescription_id" name="prescription_id" value="<%  %>">
+              <button class="save-medicine-btn">Save</button>
+            </div>
+          </div>
+          
           <div class="pagination">
             <% if (currentPage>1) { %>
               <a href="/patient?page=<%= currentPage - 1 %>&query=<%= searchQuery %>">Prev</a>

@@ -345,22 +345,22 @@ body {
 .pagination a {
   margin: 0 5px;
   padding: 8px 16px;
-  border: 1px solid #007bff;
+  border: 1px solid #003366;
   border-radius: 4px;
   text-decoration: none;
-  color: #007bff;
+  color: #003366;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .pagination a:hover {
-  background-color: #007bff;
+  background-color: #003366;
   color: #fff;
 }
 
 .pagination a.active {
-  background-color: #007bff;
+  background-color: #003366;
   color: #fff;
-  border-color: #007bff;
+  border-color: #003366;
 }
 
 /* Sort Button Styles */

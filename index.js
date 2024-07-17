@@ -15,6 +15,7 @@ const port = 3000;
 env.config();
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(express.static("public"));
 
 
@@ -322,15 +323,18 @@ app.get("/patient", async(req, res) => {
     const totalResult = await db.query(queryText, queryParams);
     const totalItems = parseInt(totalResult.rows[0].count);
 
-    queryText = "SELECT * FROM health_center_prescription p JOIN health_center_doctor d ON p.doctor_id_id=d.id";
+    queryText = "SELECT p.*,d.doctor_name FROM health_center_prescription p JOIN health_center_doctor d ON p.doctor_id_id=d.id";
     queryParams = [limit, offset];
     if (searchQuery) {
       queryText += " WHERE user_id_id ILIKE $3 OR patient_name ILIKE $3 OR doctor_name ILIKE $3 or date::text ILIKE $3 ";
       queryParams.push(`%${searchQuery}%`);
     }
+
     queryText += " LIMIT $1 OFFSET $2";
     const result = await db.query(queryText, queryParams);
+    // console.log(result.rows);
     const items = result.rows.map(item => ({
+      prescription_id:item.id,
       user_id_id:item.user_id_id,
       patient_name:item.patient_name,
       doctor_name:item.doctor_name,
@@ -352,6 +356,124 @@ app.get("/patient", async(req, res) => {
     res.status(500).send("Server Error");
   }
 });
+
+app.get('/autocompletedoctor', async (req, res) => {
+  const doctorName = req.query.doctor_name;
+  console.log(req.query);
+  try {
+    const result = await db.query(
+      "SELECT doctor_name FROM health_center_doctor WHERE doctor_name ILIKE $1 LIMIT 100",
+      [`%${doctorName}%`]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching suggestions:', error);
+    res.status(500).send('Error fetching suggestions');
+  }
+});
+
+
+app.post('/add-patient-log', async (req, res) => {
+  const {
+    visit_date,
+    doctor_name,
+    patient_id,
+    patient_name,
+    age,
+    relation,
+    dependent_relation,
+    ailment,
+    test,
+    suggestion,
+    medicine_name,
+    manufacturer_name,
+    pack_size_label,
+    quantity,
+    days,
+    times
+  } = req.body;
+  const l=visit_date.length;
+  try {
+    for (let i = 0; i < l; i++) {
+      const res1 = await db.query("SELECT id FROM health_center_doctor WHERE doctor_name=$1",[doctor_name[i]]);
+      const doctor_id=res1.rows[0].id;
+      const res2=await db.query("INSERT INTO health_center_prescription (details,date,test,suggestions,doctor_id_id,user_id_id,patient_name,relation,relationship,age) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",[ailment[i],visit_date[i],test[i],suggestion[i],doctor_id,patient_id[i],patient_name[i],relation[i],dependent_relation[i],age[i]]);
+      const pres_id=res2.rows[0].id;
+      console.log(pres_id);
+      try {
+        for (let j = 0; j < medicine_name.length; j++) {
+          const med_id=await db.query("SELECT id FROM health_center_medicine WHERE brand_name=$1 AND manufacturer_name=$2 AND pack_size_label=$3",[medicine_name[i][j],manufacturer_name[i][j],pack_size_label[i][j]]);
+          // console.log(med_id.rows[0]);
+          const res3=await db.query("INSERT INTO health_center_prescribed_medicine (quantity,days,times,medicine_id_id,prescription_id_id) VALUES ($1,$2,$3,$4,$5)",[quantity[i][j],days[i][j],times[i][j],med_id.rows[0].id,pres_id]);
+        } 
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    res.redirect("/patient");
+  } catch (error) {
+    console.log(error);
+    
+  }
+});
+
+app.get('/prescription/:id', async (req, res) => {
+  const prescriptionId = req.params.id;
+  try {
+    console.log(prescriptionId);
+    const prescription = await db.query("SELECT * FROM health_center_prescription p JOIN health_center_doctor d on p.doctor_id_id=d.id WHERE p.id=$1", [prescriptionId]);
+    const medicines = await db.query("SELECT * FROM health_center_prescribed_medicine p JOIN health_center_medicine m ON p.medicine_id_id=m.id WHERE prescription_id_id=$1", [prescriptionId]);
+    // console.log(prescription.rows);
+    res.json({
+      doctor_name: prescription.rows[0].doctor_name,
+      patient_name: prescription.rows[0].patient_name,
+      age: prescription.rows[0].age,
+      medicines: medicines.rows
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error fetching prescription data");
+  }
+});
+
+
+app.post('/update-medicine', async (req, res) => {
+  const { prescription_id, brand_name, manufacturer_name, pack_size_label, quantity, days, times } = req.body;
+  console.log(req.body);
+  try {
+    // Assuming you have a function to get the medicine_id based on the brand_name
+    const result1 = await db.query('SELECT id FROM health_center_medicine WHERE brand_name = $1 AND manufacturer_name=$2 AND pack_size_label=$3', [brand_name,manufacturer_name,pack_size_label]);
+    const medicine_id = result1.rows[0].id;
+    const result = await db.query(
+      "INSERT INTO health_center_prescribed_medicine (quantity, days, times, medicine_id_id, prescription_id_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [quantity, days, times, medicine_id, prescription_id]
+    );
+    
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error saving medicine');
+  }
+});
+
+
+
+// app.post('/prescribed_medicine/:id', async (req, res) => {
+//   const prescriptionId = req.params.id;
+//   const { revoked_status } = req.body;
+
+//   try {
+//     console.log(prescriptionId);
+//     const prescription = await db.query(
+//       "UPDATE health_center_prescribed_medicine SET revoked_status=$1, revoked_date=$2 WHERE id=$3",
+//       [revoked_status, new Date(), prescriptionId]
+//     );
+//     res.status(200).send("Ok");
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send("Error updating prescription data");
+//   }
+// });
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
@@ -390,15 +512,6 @@ app.get("/", (req, res) => {
 // });
 
 //TODO: Add a get route for the submit button
-// app.get("/submit",function(req,res){
-//   if (req.isAuthenticated()) {
-//     res.render("submit.ejs");
-//   }
-//   else
-//   {
-//     res.render("/login");
-//   }
-// })
 //Think about how the logic should work with authentication.
 
 
@@ -410,20 +523,6 @@ app.get("/", (req, res) => {
 //   })
 // );
 
-
-
-//TODO: Create the post route for submit.
-// app.post("/submit",async function(req,res){
-//   const secret=req.body.secret;
-//   console.log(req.user);
-//   try {
-//     await db.query("UPDATE users SET secret =$1 where email=$2",[secret,req.user.email])
-//     res.redirect("/secrets");
-//   } catch (err) {
-//     console.log(err);
-//   }
-// })
-//Handle the submitted data and add it to the database
 
 // passport.use(
 //   "local",
