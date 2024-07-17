@@ -435,7 +435,7 @@ function createEntryRow() {
       dependentRelationContainer.style.display = 'none';
     }
   }
-  createEntryRow(); // Create the first entry row
+  createEntryRow(); 
 });
 
 
@@ -477,7 +477,28 @@ async function fetchPrescriptionData(prescriptionId) {
 function printPrescription() {
     window.print();
 }
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
 
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}  
+function formatonlyDate(dateString) {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}  
 function fillPrescriptionPopup(data) {
   document.querySelector('.doctor-details').innerText = `Doctor: ${data.doctor_name}`;
   document.querySelector('.patient-details').innerText = `Patient: ${data.patient_name}`;
@@ -489,28 +510,52 @@ function fillPrescriptionPopup(data) {
   data.medicines.forEach(med => {
     if (med.revoked_date == null)
       med.revoked_date = '';
+    else
+    med.revoked_date=formatDate(med.revoked_date);
+    med.prescribed_date=formatonlyDate(med.prescribed_date);
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${med.brand_name}</td>
       <td>${med.quantity}</td>
       <td>${med.days}</td>
       <td>${med.times}</td>
+      <td>${med.prescribed_date}</td>
       <td><input type="checkbox" class="revoke-checkbox" data-id="${med.id}" ${med.medicine_revoked ? 'checked disabled' : ''}></td>
       <td>${med.revoked_date}</td>
     `;
     if (med.medicine_revoked) {
       row.classList.add('revoked');
+      row.style.color = 'red';
     }
     tbody.appendChild(row);
   });
 
+ 
   document.querySelectorAll('.revoke-checkbox').forEach(checkbox => {
-    checkbox.addEventListener('change', (event) => {
+    const dataId = checkbox.getAttribute('data-id');
+    checkbox.addEventListener('change', async(event) => {
       if (event.target.checked) {
         const row = event.target.closest('tr');
         row.classList.add('revoked');
         event.target.disabled = true;
-        // Add your API call here to update the revoke status in the database
+        console.log(dataId);
+        try {
+          const response = await fetch(`/prescribed_medicine/${dataId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ revoked_status: true }) 
+          });
+  
+          if (response.ok) {
+            console.log('Revoke status updated successfully');
+          } else {
+            console.error('Failed to update revoke status');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
       }
     });
   });
@@ -536,13 +581,6 @@ async function saveNewMedicine() {
   const quantity = document.querySelector('input[name="new_quantity"]').value;
   const days = document.querySelector('input[name="new_days"]').value;
   const times = document.querySelector('input[name="new_times"]').value;
-  // console.log(prescriptionId);
-  // console.log(medicineName);
-  // console.log(manufacturerName);
-  // console.log(packSizeLabel);
-  // console.log(quantity);
-  // console.log(days);
-  // console.log(times);
   const response = await fetch('/update-medicine', {
     method: 'POST',
     headers: {
@@ -568,6 +606,7 @@ async function saveNewMedicine() {
       <td>${newMedicine.quantity}</td>
       <td>${newMedicine.days}</td>
       <td>${newMedicine.times}</td>
+      <td>${formatonlyDate(newMedicine.prescribed_date)}</td>
       <td><input type="checkbox" class="revoke-checkbox" data-id="${newMedicine.id}"></td>
       <td></td>
     `;
@@ -624,133 +663,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// async function fillPrescriptionPopup(data) {
-//   document.querySelector('.doctor-details').innerText = `Doctor: ${data.doctor_name}`;
-//   document.querySelector('.patient-details').innerText = `Patient: ${data.patient_name}, Age: ${data.age}`;
-  
-//   const tbody = document.querySelector('.medicines-table tbody');
-//   tbody.innerHTML = '';
-  
-//   data.medicines.forEach(med => {
-//     if (med.revoked_date == null) med.revoked_date = '';
-//     const row = document.createElement('tr');
-//     row.innerHTML = `
-//       <td>${med.brand_name}</td>
-//       <td>${med.quantity}</td>
-//       <td>${med.days}</td>
-//       <td>${med.times}</td>
-//       <td><input type="checkbox" ${med.medicine_revoked ? 'checked' : ''}></td>
-//       <td>${med.revoked_date}</td>
-//     `;
-//     row.querySelector('input[type="checkbox"]').addEventListener('change', () => {
-//       if (row.querySelector('input[type="checkbox"]').checked) {
-//         row.style.textDecoration = 'line-through';
-//         row.querySelector('input[type="checkbox"]').disabled = true;
-//       }
-//     });
-//     tbody.appendChild(row);
-//   });
-// }
-
-
-
-// document.addEventListener('DOMContentLoaded', () => {
-//   const pres_popup = document.getElementById('prescriptionPopup');
-//   const closeBtn = document.querySelector('.prescription-close-btn');
-//   const viewPrescriptionBtns = document.querySelectorAll('.view-prescription-btn');
-  
-//   viewPrescriptionBtns.forEach(button => {
-//     button.addEventListener('click', async () => {
-//       const prescriptionId = button.getAttribute('data-id');
-//       const prescriptionData = await fetchPrescriptionData(prescriptionId);
-//       fillPrescriptionPopup(prescriptionData);
-//       pres_popup.style.display = 'block';
-//     });
-//   });
-  
-//   closeBtn.onclick = () => {
-//     pres_popup.style.display = 'none';
-//   }
-  
-//   window.onclick = (event) => {
-//     if (event.target == pres_popup) {
-//       pres_popup.style.display = 'none';
-//     }
-//   }
-  
-//   document.querySelector('.download-btn').addEventListener('click', () => {
-//     downloadPrescription();
-//   });
-  
-  
-//   document.querySelector('.add-medicine-btn').addEventListener('click', () => {
-//     // Logic to open another popup to add more medicine entries
-//   });
-// });
-
-
-function printPrescription() {
-  window.print();
-}
-document.querySelector('.print-btn').addEventListener('click', () => {
-  printPrescription();
-});
-
-
-
-
-
-

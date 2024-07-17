@@ -404,7 +404,7 @@ app.post('/add-patient-log', async (req, res) => {
         for (let j = 0; j < medicine_name.length; j++) {
           const med_id=await db.query("SELECT id FROM health_center_medicine WHERE brand_name=$1 AND manufacturer_name=$2 AND pack_size_label=$3",[medicine_name[i][j],manufacturer_name[i][j],pack_size_label[i][j]]);
           // console.log(med_id.rows[0]);
-          const res3=await db.query("INSERT INTO health_center_prescribed_medicine (quantity,days,times,medicine_id_id,prescription_id_id) VALUES ($1,$2,$3,$4,$5)",[quantity[i][j],days[i][j],times[i][j],med_id.rows[0].id,pres_id]);
+          const res3=await db.query("INSERT INTO health_center_prescribed_medicine (quantity,days,times,medicine_id_id,prescription_id_id,prescribed_date,prescribed_by) VALUES ($1,$2,$3,$4,$5,$6,$7)",[quantity[i][j],days[i][j],times[i][j],med_id.rows[0].id,pres_id,visit_date[i],doctor_id]);
         } 
       } catch (error) {
         console.log(error);
@@ -422,7 +422,7 @@ app.get('/prescription/:id', async (req, res) => {
   try {
     console.log(prescriptionId);
     const prescription = await db.query("SELECT * FROM health_center_prescription p JOIN health_center_doctor d on p.doctor_id_id=d.id WHERE p.id=$1", [prescriptionId]);
-    const medicines = await db.query("SELECT * FROM health_center_prescribed_medicine p JOIN health_center_medicine m ON p.medicine_id_id=m.id WHERE prescription_id_id=$1", [prescriptionId]);
+    const medicines = await db.query("SELECT p.*,m.brand_name FROM health_center_prescribed_medicine p JOIN health_center_medicine m ON p.medicine_id_id=m.id WHERE prescription_id_id=$1", [prescriptionId]);
     // console.log(prescription.rows);
     res.json({
       doctor_name: prescription.rows[0].doctor_name,
@@ -441,12 +441,11 @@ app.post('/update-medicine', async (req, res) => {
   const { prescription_id, brand_name, manufacturer_name, pack_size_label, quantity, days, times } = req.body;
   console.log(req.body);
   try {
-    // Assuming you have a function to get the medicine_id based on the brand_name
     const result1 = await db.query('SELECT id FROM health_center_medicine WHERE brand_name = $1 AND manufacturer_name=$2 AND pack_size_label=$3', [brand_name,manufacturer_name,pack_size_label]);
     const medicine_id = result1.rows[0].id;
     const result = await db.query(
-      "INSERT INTO health_center_prescribed_medicine (quantity, days, times, medicine_id_id, prescription_id_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [quantity, days, times, medicine_id, prescription_id]
+      "INSERT INTO health_center_prescribed_medicine (quantity, days, times, medicine_id_id, prescription_id_id,prescribed_date) VALUES ($1, $2, $3, $4, $5,$6) RETURNING *",
+      [quantity, days, times, medicine_id, prescription_id,new Date()]
     );
     
     res.status(200).json(result.rows[0]);
@@ -458,22 +457,21 @@ app.post('/update-medicine', async (req, res) => {
 
 
 
-// app.post('/prescribed_medicine/:id', async (req, res) => {
-//   const prescriptionId = req.params.id;
-//   const { revoked_status } = req.body;
-
-//   try {
-//     console.log(prescriptionId);
-//     const prescription = await db.query(
-//       "UPDATE health_center_prescribed_medicine SET revoked_status=$1, revoked_date=$2 WHERE id=$3",
-//       [revoked_status, new Date(), prescriptionId]
-//     );
-//     res.status(200).send("Ok");
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send("Error updating prescription data");
-//   }
-// });
+app.post('/prescribed_medicine/:id', async (req, res) => {
+  const prescriptionId = req.params.id;
+  const { revoked_status } = req.body;
+  
+  try {
+    const prescription = await db.query(
+      "UPDATE health_center_prescribed_medicine SET medicine_revoked=$1, revoked_date=$2 WHERE id=$3",
+      [revoked_status, new Date(), prescriptionId]
+    );
+    res.status(200).send("Ok");
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error updating prescription data");
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
