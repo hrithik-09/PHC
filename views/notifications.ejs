@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+  <meta charset="UTF-8">
+  <title>PHC - Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <link rel="stylesheet" href="css/notifications.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <%- include('partials/sidebar') %>
+      <div class="app-content">
+        <div class="cards-container">
+          <div class="card">
+            <h1>Total Number of Patients Today</h3>
+              <h4 id="today-value"></h4>
+            <p id="patients-today-count">0</p>
+          </div>
+          <div class="card">
+          <h1> Patients visiting data</h3>
+          <input type="date" id="start-date" placeholder="Start Date">
+          <input type="date" id="end-date" placeholder="End Date">
+          <select id="doctor-select">
+            <option value="">All Doctors</option>
+            <!-- Populate dynamically with doctor data -->
+          </select>
+          <button id="fetch-total-patients">Fetch</button>
+          <p id="total-patients">0</p>
+          <button id="export-patients">Export</button>
+          </div>  
+          <div class="card">
+            <h1>Total No. of Medicines in Stock</h1>
+            <div>
+              <label for="filter-entry-date">Entry Dt:</label>
+              <input type="date" id="filter-entry-date">
+              <label for="filter-expiry-date">Expiry Dt:</label>
+              <input type="date" id="filter-expiry-date">
+              <button id="fetch-total-medicine">Fetch</button>
+            </div>
+            <p id="medicine-stock-count">0</p>
+            <button id="export-stock">Export</button>
+          </div>
+          <div class="card">
+            <h1>Medicines with Low Stock</h1>
+            <p id="low-stock-count">0</p>
+            <!-- <div class="scrollable-table">
+              <table id="low-stock-table">
+                <thead>
+                  <tr>
+                    <th>Medicine Name</th>
+                    <th>Stock Entry Date</th>
+                    <th>Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div> -->
+            <button id="export-low-stock">Export Data</button>
+          </div>
+          <div class="card">
+            <h1>Medicines Near Expiry</h1>
+            <p id="near-expiry-count">0</p>
+            <div class="scrollable-table">
+              <!-- <table id="near-expiry-table">
+                <thead>
+                  <tr>
+                    <th>Medicine Name</th>
+                    <th>Stock Entry Date</th>
+                    <th>Expiry Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table> -->
+            </div>
+            <button id="export-near-expiry">Export Data</button>
+          </div>
+          <div class="card">
+            <h1>Today's Doctor Schedule</h1>
+            <div class="scrollable-table">
+              <table id="doctor-schedule-table">
+                <thead>
+                  <tr>
+                    <th>Doctor Name</th>
+                    <th>Visiting Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Populate with doctor schedule dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+  <script src="js/script.js"></script>
+</body>
+
+</html>

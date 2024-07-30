@@ -289,6 +289,7 @@ function createEntryRow() {
 
       <div class="dependent-relation-container" style="display: none;">
         <select name="dependent_relation[]">
+          <option value="Self">Self</option>
           <option value="Spouse">Spouse</option>
           <option value="Child">Child</option>
           <option value="Sister">Sister</option>
@@ -662,4 +663,188 @@ document.addEventListener('DOMContentLoaded', () => {
       addMedPopup.style.display = 'none';
     }
   }
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  const searchButton = document.querySelector('.search-button');
+
+  searchButton.addEventListener('click', async function () {
+    const searchBar = document.querySelector('.search-bar').value;
+    const searchField = document.querySelector('.search-dropdown').value;
+
+    if (searchBar.trim() === '') {
+      alert('Please enter a search term');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/search-prescriptions?term=${encodeURIComponent(searchBar)}&field=${encodeURIComponent(searchField)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch search results');
+      }
+
+      const results = await response.json();
+      const tbody = document.querySelector('.results-table tbody');
+      tbody.innerHTML = '';
+
+      results.forEach(result => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+        <td>${result.user_id_id}</td>
+        <td>${result.patient_name}</td>
+        <td>${formatonlyDate(result.date)}</td>
+        <td>${result.doctor_name}</td>
+        <td><button class="view-prescription" data-id="${result.id}">View Prescription</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+      const presPopup = document.getElementById('prescriptionPopup');
+      document.querySelectorAll('.view-prescription').forEach(button => {
+        button.addEventListener('click', async function () {
+          const prescriptionId = this.dataset.id;
+          const prescriptionData = await fetchPrescriptionData(prescriptionId);
+          fillPrescriptionPopup(prescriptionData);
+          presPopup.style.display = 'block';
+        });
+      });
+    } catch (error) {
+      console.error(error);
+      // alert('An error occurred while fetching search results');
+    }
+  });
+});
+
+async function fetchTotalPatientsToday() {
+  try {
+    const response = await fetch('/total-patients-today');
+    if (response.ok) {
+      const data = await response.json();
+      console.log(data);
+      document.getElementById('patients-today-count').textContent = data.totalPatients;
+    } else {
+      document.getElementById('patients-today-count').textContent = 'Error fetching data';
+    }
+  } catch (error) {
+    document.getElementById('patients-today-count').textContent = 'Error fetching data';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', fetchTotalPatientsToday);
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Fetch and display total patients based on filters
+  document.getElementById('fetch-total-patients').addEventListener('click', async function() {
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    const doctorId = document.getElementById('doctor-select').value;
+
+    const params = new URLSearchParams({
+      startDate,
+      endDate,
+      doctorId
+    });
+
+    try {
+      const response = await fetch(`/total-patients?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        document.getElementById('total-patients').textContent = data.totalPatients;
+      } else {
+        document.getElementById('total-patients').textContent = 'Error fetching data';
+      }
+    } catch (error) {
+      document.getElementById('total-patients').textContent = 'Error fetching data';
+    }
+  });
+  document.getElementById('fetch-total-medicine').addEventListener('click', async function() {
+    const entryDate = document.getElementById('filter-entry-date').value;
+    const expiryDate = document.getElementById('filter-expiry-date').value;
+
+    const params = new URLSearchParams({
+      entryDate,
+      expiryDate,
+    });
+
+    try {
+      const response = await fetch(`/total-medicine?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        document.getElementById('medicine-stock-count').textContent = data.medicinecount;
+      } else {
+        document.getElementById('medicine-stock-count').textContent = 'Error fetching data';
+      }
+    } catch (error) {
+      document.getElementById('medicine-stock-count').textContent = 'Error fetching data';
+    }
+  });
+
+  // Export patient data to Excel
+  document.getElementById('export-patients').addEventListener('click', async function() {
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    const doctorId = document.getElementById('doctor-select').value;
+
+    const params = new URLSearchParams({
+      startDate,
+      endDate,
+      doctorId
+    });
+
+    window.location.href = `/export-patients?${params.toString()}`;
+  });
+
+  document.getElementById('export-stock').addEventListener('click', async function() {
+    const entryDate = document.getElementById('filter-entry-date').value;
+    const expiryDate = document.getElementById('filter-expiry-date').value;
+    const params = new URLSearchParams({
+      entryDate,
+      expiryDate
+    });
+
+    window.location.href = `/export-stock?${params.toString()}`;
+  });
+
+  // Fetch doctor data and populate select options
+  async function fetchDoctors() {
+    try {
+      const response = await fetch('/doctors');
+      if (response.ok) {
+        const doctors = await response.json();
+        const doctorSelect = document.getElementById('doctor-select');
+        doctors.forEach(doctor => {
+          const option = document.createElement('option');
+          option.value = doctor.id;
+          option.textContent = doctor.doctor_name;
+          doctorSelect.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+    }
+  }
+
+  fetchDoctors();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Get today's date
+  const today = new Date();
+  
+  // Format date as YYYY-MM-DD
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const formattedDate = `${year}-${month}-${day}`;
+  
+  // Get the day of the week
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayOfWeek = daysOfWeek[today.getDay()];
+  
+  // Combine date and day
+  const displayValue = `${formattedDate} (${dayOfWeek})`;
+  
+  // Set the value of the input field
+  document.getElementById('today-value').innerHTML = "Date : "+displayValue;
 });

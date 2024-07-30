@@ -9,7 +9,8 @@ import env from "dotenv";
 import multer from "multer";
 import xlsx from "xlsx"
 import {format} from "date-fns"
-
+import fs from 'fs';
+import json2xls from "json2xls";
 const app = express();
 const port = 3000;
 env.config();
@@ -17,7 +18,7 @@ env.config();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static("public"));
-
+app.use(json2xls.middleware);
 
 const db = new pg.Client({
   user: process.env.PG_USER,
@@ -30,6 +31,17 @@ db.connect();
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+
+app.get("/home", async(req, res) => {
+  try {
+    res.render("home.ejs", {  
+    path:req.path
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Server Error");
+  }
+});
 
 app.get("/medicine", async(req, res) => {
   const page = parseInt(req.query.page) || 1; 
@@ -472,6 +484,237 @@ app.post('/prescribed_medicine/:id', async (req, res) => {
     res.status(500).send("Error updating prescription data");
   }
 });
+
+app.get('/search-prescriptions', async (req, res) => {
+  const { term, field } = req.query;
+  console.log(req.query);
+  if (!term || !field) {
+    return res.status(400).json({ error: 'Missing search term or field' });
+  }
+
+  const query = `SELECT p.*,d.doctor_name FROM health_center_prescription p JOIN health_center_doctor d ON p.doctor_id_id=d.id WHERE ${field} ILIKE $1`; 
+  const values = [`%${term}%`];
+
+  try {
+    const result = await db.query(query, values);
+    console.log("hello");
+    console.log(result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error executing query:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get("/notifications", async(req, res) => {
+  // console.log(req.path);
+  try {
+    
+    res.render("notifications.ejs", {
+      path:req.path
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Server Error");
+  }
+});
+
+app.get('/total-patients-today', async (req, res) => {
+  try {
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+
+    const query = `
+      SELECT COUNT(*) as total_patients
+      FROM health_center_prescription
+      WHERE date >= $1 AND date <= $2
+    `;
+    const result = await db.query(query, [startOfDay, endOfDay]);
+    const totalPatients = result.rows[0].total_patients;
+    console.log(totalPatients);
+    res.json({ totalPatients });
+  } catch (error) {
+    console.error('Error fetching total patients today:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/total-patients', async (req, res) => {
+  try {
+    const { startDate, endDate, doctorId } = req.query;
+    let params = [];
+    let conditions = [];
+
+    if (startDate) {
+      params.push(startDate);
+      conditions.push(`date >= $${params.length}`);
+    }
+    if (endDate) {
+      params.push(endDate);
+      conditions.push(`date <= $${params.length}`);
+    }
+    if (doctorId) {
+      params.push(doctorId);
+      conditions.push(`doctor_id_id = $${params.length}`);
+    }
+
+    let query = `
+      SELECT COUNT(*) as total_patients
+      FROM health_center_prescription
+    `;
+    if (conditions.length > 0) {
+      query += 'WHERE ' + conditions.join(' AND ');
+    }
+
+    const result = await db.query(query, params);
+    const totalPatients = result.rows[0].total_patients;
+
+    res.json({ totalPatients });
+  } catch (error) {
+    console.error('Error fetching total patients:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.get('/total-medicine', async (req, res) => {
+  try {
+    const { entryDate, expiryDate } = req.query;
+    let params = [];
+    let conditions = [];
+
+    if (entryDate) {
+      params.push(entryDate);
+      conditions.push(`date >= $${params.length}`);
+    }
+    if (expiryDate) {
+      params.push(expiryDate);
+      conditions.push(`expiry_date <= $${params.length}`);
+    }
+
+    let query = `
+      SELECT COUNT(*) as medicinecount
+      FROM health_center_stock h JOIN health_center_stock_entry hs on h.stock_id_id=hs.id
+    `;
+    if (conditions.length > 0) {
+      query += 'WHERE ' + conditions.join(' AND ');
+    }
+
+    const result = await db.query(query, params);
+    const medicinecount = result.rows[0].medicinecount;
+
+    res.json({ medicinecount });
+  } catch (error) {
+    console.error('Error fetching total patients:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+// Route to export patient data to Excel
+app.get('/export-patients', async (req, res) => {
+  try {
+    const { startDate, endDate, doctorId } = req.query;
+    let params = [];
+    let conditions = [];
+
+    if (startDate) {
+      params.push(startDate);
+      conditions.push(`p.date >= $${params.length}`);
+    }
+    if (endDate) {
+      params.push(endDate);
+      conditions.push(`p.date <= $${params.length}`);
+    }
+    if (doctorId) {
+      params.push(doctorId);
+      conditions.push(`p.doctor_id_id = $${params.length}`);
+    }
+
+    let query = `
+      SELECT p.user_id_id AS PatientId, p.patient_name AS PatientName, p.age AS Age, 
+             p.relation AS Relation, p.relationship AS Relationship, p.details AS Symptoms, 
+             d.doctor_name AS DoctorName, p.date AS VisitDate 
+      FROM health_center_prescription p
+      JOIN health_center_doctor d ON p.doctor_id_id = d.id
+    `;
+
+    if (conditions.length > 0) {
+      query += 'WHERE ' + conditions.join(' AND ');
+    }
+
+    const result = await db.query(query, params);
+
+    const filePath = 'patients.xlsx';
+    fs.writeFileSync(filePath, json2xls(result.rows), 'binary');
+
+    res.download(filePath, 'patients.xlsx', (err) => {
+      if (err) {
+        console.error('Error downloading file:', err);
+        res.status(500).send('Error downloading file');
+      }
+      fs.unlinkSync(filePath); // Delete file after download
+    });
+  } catch (error) {
+    console.error('Error exporting patients:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/export-stock', async (req, res) => {
+  try {
+    const { entryDate, expiryDate } = req.query;
+    let params = [];
+    let conditions = [];
+
+    if (entryDate) {
+      params.push(entryDate);
+      conditions.push(`hs.date >= $${params.length}`);
+    }
+    if (expiryDate) {
+      params.push(expiryDate);
+      conditions.push(`hs.expiry_date <= $${params.length}`);
+    }
+
+    let query = `
+      SELECT * 
+      FROM health_center_stock h
+      JOIN health_center_stock_entry hs ON h.stock_id_id = hs.id
+      JOIN health_center_medicine hm ON hs.medicine_id_id = hm.id
+    `;
+
+    if (conditions.length > 0) {
+      query += 'WHERE ' + conditions.join(' AND ');
+    }
+
+    const result = await db.query(query, params);
+
+    const filePath = 'stocks.xlsx';
+    fs.writeFileSync(filePath, json2xls(result.rows), 'binary');
+
+    res.download(filePath, 'stocks.xlsx', (err) => {
+      if (err) {
+        console.error('Error downloading file:', err);
+        res.status(500).send('Error downloading file');
+      }
+      fs.unlinkSync(filePath); // Delete file after download
+    });
+  } catch (error) {
+    console.error('Error exporting stock:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+app.get('/doctors', async (req, res) => {
+  try {
+    const result = await db.query('SELECT id, doctor_name FROM health_center_doctor');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching doctors:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

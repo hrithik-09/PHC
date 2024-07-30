@@ -1,0 +1,342 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --table-border: #1a2131;
+  --table-header: #1a2131;
+  --action-color: #003366;
+  --action-color-hover: #004080;
+  --filter-reset: #2c394f;
+  --app-bg: #fff;
+  --sidebar: #f3f6fd;
+  --app-content-secondary-color: #f3f6fd;
+  --app-content-main-color: #1f1c2e;
+  --sidebar-link: #1f1c2e;
+  --sidebar-hover-link: rgba(195, 207, 244, 0.5);
+  --sidebar-active-link: rgba(195, 207, 244, 1);
+  --sidebar-main-color: #1f1c2e;
+  --filter-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+  background-color: var(--app-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app-container {
+  border-radius: 4px;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  max-width: 1280px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  max-width: 2000px;
+  margin: 0 auto;
+}
+
+/* sidebar */
+.sidebar {
+  flex-basis: 200px;
+  max-width: 200px;
+  flex-shrink: 0;
+  background-color: var(--sidebar);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-list {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 70px;
+}
+.sidebar-list-item {
+  position: relative;
+  margin-bottom: 4px;
+}
+.sidebar-list-item a {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 16px;
+  color: var(--sidebar-link);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 24px;
+}
+.sidebar-list-item svg {
+  margin-right: 8px;
+}
+.sidebar-list-item:hover {
+  background-color: var(--sidebar-hover-link);
+}
+.sidebar-list-item.active {
+  background-color: var(--sidebar-active-link);
+}
+.sidebar-list-item.active:before {
+  content: "";
+  position: absolute;
+  right: 0;
+  background-color: var(--action-color);
+  height: 100%;
+  width: 4px;
+}
+@media screen and (max-width: 1024px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* General App Content Styling */
+.app-content {
+  padding: 16px;
+  background-color: var(--app-bg);
+  height: 100%;
+  flex: 1;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+}
+
+/* Header Styling */
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+  justify-content: center;
+  /* justify-items: center; */
+  text-align: center;
+  background-color: rgb(7, 7, 71);
+  height: 100px;
+}
+.header .logo {
+  width: 80px;
+  height: 80px;
+  margin-right: 20px;
+}
+.header-text {
+  color: white; 
+}
+.header-text h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 500;
+}
+.header-text h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+/* Search Bar Styling */
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.search-bar {
+  width: 300px;
+  padding: 10px;
+  border: 2px solid var(--action-color);
+  border-radius: 8px;
+  margin-right: 10px;
+  font-size: 16px;
+}
+.search-dropdown {
+  padding: 10px;
+  border: 2px solid var(--action-color);
+  border-radius: 8px;
+  margin-right: 10px;
+  font-size: 16px;
+}
+.search-button {
+  padding: 10px 20px;
+  border: none;
+  background-color: var(--action-color);
+  color: #fff;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-button:hover {
+  background-color: var(--action-color-hover);
+}
+
+/* Table Styling */
+.results-table {
+  width: 100%;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th, .table td {
+  border: 1px solid var(--table-border);
+  padding: 10px;
+  text-align: center;
+}
+.table th {
+  background-color: rgb(12, 12, 78);
+  color: #fff;
+  font-weight: normal;
+}
+.table tbody tr:hover {
+  background-color: var(--sidebar-hover-link);
+}
+
+.view-prescription {
+  background-color: #004080;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  
+}
+
+
+.view-prescription:hover {
+  background-color: #003366;
+}
+
+.pres_popup {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.prescription-popup-content {
+  background-color: white;
+  margin: 5% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 900px;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.prescription-close-btn {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.prescription-close-btn:hover,
+.prescription-close-btn:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.prescription-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.logo {
+  width: 100px;
+  height: 100px;
+  background-image: url('../img/logo.jpg');
+  background-size: cover;
+  margin-right: 20px;
+}
+
+.prescription-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1; /* Allows the title to take up remaining space */
+  text-align: center;
+}
+
+.main-title {
+  font-size: 32px; /* Larger font size for "Primary Health Center" */
+  font-weight: bold;
+  color: #004080;
+}
+
+.sub-title {
+  font-size: 24px; /* Smaller font size for "PDPM IIITDM Jabalpur" */
+  color: #004080;
+}
+
+
+
+.prescription-details {
+  margin-top: 20px;
+}
+
+.medicines-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.medicines-table th, .medicines-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.medicines-table th {
+  background-color: #004080;
+  color: white;
+}
+.print-btn {
+  background-color: #004080;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.print-btn:hover {
+  background-color: #003366;
+}
+
+@media print {
+  .prescription-popup-content {
+    width: 100%;
+    border: none;
+  }
+
+  .prescription-close-btn, .add-more-medicine-btn, .print-btn {
+    display: none;
+  }
+  .logo {
+    width: 100px;
+    height: 100px;
+    background-image: url('../img/logo.jpg');
+    background-size: cover;
+    margin-right: 20px;
+  }
+
+  .pres_popup {
+    background-color: white;
+  }
+}
