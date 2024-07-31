@@ -197,3 +197,7 @@ body {
 #today-value{
   height: 30px;
 }
+
+#instruction{
+  color: rgb(238, 51, 51);
+}

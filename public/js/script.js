@@ -848,3 +848,45 @@ document.addEventListener('DOMContentLoaded', function() {
   // Set the value of the input field
   document.getElementById('today-value').innerHTML = "Date : "+displayValue;
 });
+
+
+async function fetchmedicinewithlowstock() {
+  try {
+    const response = await fetch('/medicine-with-low-stock');
+    if (response.ok) {
+      const data = await response.json();
+      console.log(data);
+      document.getElementById('low-stock-count').textContent = data.totalcount;
+    } else {
+      document.getElementById('low-stock-count').textContent = 'Error fetching data';
+    }
+  } catch (error) {
+    document.getElementById('low-stock-count').textContent = 'Error fetching data';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', fetchmedicinewithlowstock);
+
+document.getElementById('export-low-stock').addEventListener('click', async function() {
+  window.location.href = `/export-low-count-stock`;
+});
+document.getElementById('export-near-expiry').addEventListener('click', async function() {
+  window.location.href = `/export-near-expiry-medicine`;
+});
+
+async function fetchmedicinewithexpiry() {
+  try {
+    const response = await fetch('/medicine-with-expiry');
+    if (response.ok) {
+      const data = await response.json();
+      console.log(data);
+      document.getElementById('near-expiry-count').textContent = data.totalcount;
+    } else {
+      document.getElementById('near-expiry-count').textContent = 'Error fetching data';
+    }
+  } catch (error) {
+    document.getElementById('near-expiry-count').textContent = 'Error fetching data';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', fetchmedicinewithexpiry);

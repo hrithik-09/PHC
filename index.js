@@ -608,6 +608,34 @@ app.get('/total-medicine', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+app.get('/medicine-with-low-stock', async (req, res) => {
+  try {
+    const result = await db.query(`SELECT COUNT(*) as totalcount
+      FROM health_center_stock h where quantity_left<=50`);
+    const totalcount = result.rows[0].totalcount;
+
+    res.json({ totalcount });
+  } catch (error) {
+    console.error('Error fetching total patients:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.get('/medicine-with-expiry', async (req, res) => {
+  try {
+    const result = await db.query(`
+  SELECT COUNT(*) as totalcount
+  FROM health_center_stock h
+  JOIN health_center_stock_entry hs ON h.stock_id_id = hs.id
+  WHERE hs.expiry_date < NOW() + INTERVAL '2 months'
+`);
+    const totalcount = result.rows[0].totalcount;
+
+    res.json({ totalcount });
+  } catch (error) {
+    console.error('Error fetching total patients:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 // Route to export patient data to Excel
@@ -692,6 +720,59 @@ app.get('/export-stock', async (req, res) => {
     fs.writeFileSync(filePath, json2xls(result.rows), 'binary');
 
     res.download(filePath, 'stocks.xlsx', (err) => {
+      if (err) {
+        console.error('Error downloading file:', err);
+        res.status(500).send('Error downloading file');
+      }
+      fs.unlinkSync(filePath); // Delete file after download
+    });
+  } catch (error) {
+    console.error('Error exporting stock:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/export-low-count-stock', async (req, res) => {
+  try {
+    
+    const result = await db.query(`
+      SELECT * 
+      FROM health_center_stock h
+      JOIN health_center_stock_entry hs ON h.stock_id_id = hs.id
+      JOIN health_center_medicine hm ON hs.medicine_id_id = hm.id
+    `);
+
+    const filePath = 'stocks_with_low_count.xlsx';
+    fs.writeFileSync(filePath, json2xls(result.rows), 'binary');
+
+    res.download(filePath, 'stocks_with_low_count.xlsx', (err) => {
+      if (err) {
+        console.error('Error downloading file:', err);
+        res.status(500).send('Error downloading file');
+      }
+      fs.unlinkSync(filePath); // Delete file after download
+    });
+  } catch (error) {
+    console.error('Error exporting stock:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/export-near-expiry-medicine', async (req, res) => {
+  try {
+    
+    const result = await db.query(`
+      SELECT * 
+      FROM health_center_stock h
+      JOIN health_center_stock_entry hs ON h.stock_id_id = hs.id
+      JOIN health_center_medicine hm ON hs.medicine_id_id = hm.id
+      WHERE hs.expiry_date < NOW() + INTERVAL '2 months' 
+    `);
+
+    const filePath = 'near-expiry-medicine.xlsx';
+    fs.writeFileSync(filePath, json2xls(result.rows), 'binary');
+
+    res.download(filePath, 'near-expiry-medicine.xlsx', (err) => {
       if (err) {
         console.error('Error downloading file:', err);
         res.status(500).send('Error downloading file');
