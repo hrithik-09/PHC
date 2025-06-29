@@ -13,6 +13,7 @@ import fs from 'fs';
 import json2xls from "json2xls";
 const app = express();
 const port = 3000;
+const saltRounds = 10;
 env.config();
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,10 +28,98 @@ const db = new pg.Client({
   password: process.env.PG_PASSWORD,
   port: process.env.PG_PORT,
 });
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie:{
+      maxAge:1000*60*60*24,
+    }
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 db.connect();
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+
+app.get("/", (req, res) => {
+  if (req.isAuthenticated()) {  
+    res.render("home.ejs", { path: req.path });
+  } else {
+    res.redirect("/login"); // Redirect to login page if not authenticated
+  }
+});
+
+app.get("/login", (req, res) => {
+  res.render("login.ejs", { path: req.path });
+});
+
+app.get("/logout", (req, res, next) => {
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    res.redirect("/login"); // Redirect to login page after logout
+  });
+});
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/login",
+  })
+);
+
+// Passport configuration
+passport.use(
+  "local",
+  new Strategy(async (username, password, done) => {
+    try {
+      const result = await db.query("SELECT * FROM users WHERE email = $1", [username]);
+      
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        const storedHashedPassword = user.password;
+
+        const isMatch = await bcrypt.compare(password, storedHashedPassword);
+        if (isMatch) {
+          return done(null, user);
+        } else {
+          return done(null, false, { message: "Incorrect password" });
+        }
+      } else {
+        return done(null, false, { message: "User not found" });
+      }
+    } catch (err) {
+      console.error("Error during authentication:", err);
+      return done(err);
+    }
+  })
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id); // Use the user ID for serialization
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const result = await db.query("SELECT * FROM users WHERE id = $1", [id]);
+    if (result.rows.length > 0) {
+      done(null, result.rows[0]);
+    } else {
+      done(new Error("User not found"));
+    }
+  } catch (err) {
+    console.error("Error during deserialization:", err);
+    done(err);
+  }
+});
 
 app.get("/home", async(req, res) => {
   try {
@@ -92,7 +181,7 @@ app.get("/stock", async(req, res) => {
   const limit = parseInt(req.query.limit) || 10; 
   const offset = (page - 1) * limit;
   const searchQuery = req.query.query || ''; 
-  console.log(searchQuery);
+  // console.log(searchQuery);
   try {
     let queryText = "SELECT COUNT(*) FROM health_center_stock_entry s JOIN health_center_medicine m ON s.medicine_id_id=m.id";
     let queryParams = [];
@@ -245,8 +334,8 @@ app.post('/add-stocks', async (req, res) => {
 
       const newId = result.rows[0].id;
       await db.query(
-        'INSERT INTO health_center_stock (quantity, expiry_date, stock_id_id, medicine_id_id) VALUES ($1, $2, $3, $4)',
-        [quantity[i], expiry_date[i], newId, id]
+        'INSERT INTO health_center_stock (quantity_left, stock_id_id) VALUES ($1, $2)',
+        [quantity[i], newId]
       );
     }
     res.redirect("/stock");
@@ -324,7 +413,7 @@ app.get("/patient", async(req, res) => {
   const limit = parseInt(req.query.limit) || 10; 
   const offset = (page - 1) * limit;
   const searchQuery = req.query.query || ''; 
-  console.log(searchQuery);
+  // console.log(searchQuery);
   try {
     let queryText = "SELECT COUNT(*) FROM health_center_prescription p JOIN health_center_doctor d ON p.doctor_id_id=d.id";
     let queryParams = [];
@@ -371,7 +460,7 @@ app.get("/patient", async(req, res) => {
 
 app.get('/autocompletedoctor', async (req, res) => {
   const doctorName = req.query.doctor_name;
-  console.log(req.query);
+  // console.log(req.query);
   try {
     const result = await db.query(
       "SELECT doctor_name FROM health_center_doctor WHERE doctor_name ILIKE $1 LIMIT 100",
@@ -404,6 +493,8 @@ app.post('/add-patient-log', async (req, res) => {
     days,
     times
   } = req.body;
+  console.log(req.body);
+  
   const l=visit_date.length;
   try {
     for (let i = 0; i < l; i++) {
@@ -411,9 +502,9 @@ app.post('/add-patient-log', async (req, res) => {
       const doctor_id=res1.rows[0].id;
       const res2=await db.query("INSERT INTO health_center_prescription (details,date,test,suggestions,doctor_id_id,user_id_id,patient_name,relation,relationship,age) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",[ailment[i],visit_date[i],test[i],suggestion[i],doctor_id,patient_id[i],patient_name[i],relation[i],dependent_relation[i],age[i]]);
       const pres_id=res2.rows[0].id;
-      console.log(pres_id);
+      // console.log(pres_id);
       try {
-        for (let j = 0; j < medicine_name.length; j++) {
+        for (let j = 0; j < medicine_name[i].length; j++) {
           const med_id=await db.query("SELECT id FROM health_center_medicine WHERE brand_name=$1 AND manufacturer_name=$2 AND pack_size_label=$3",[medicine_name[i][j],manufacturer_name[i][j],pack_size_label[i][j]]);
           // console.log(med_id.rows[0]);
           const res3=await db.query("INSERT INTO health_center_prescribed_medicine (quantity,days,times,medicine_id_id,prescription_id_id,prescribed_date,prescribed_by) VALUES ($1,$2,$3,$4,$5,$6,$7)",[quantity[i][j],days[i][j],times[i][j],med_id.rows[0].id,pres_id,visit_date[i],doctor_id]);
@@ -432,7 +523,7 @@ app.post('/add-patient-log', async (req, res) => {
 app.get('/prescription/:id', async (req, res) => {
   const prescriptionId = req.params.id;
   try {
-    console.log(prescriptionId);
+    // console.log(prescriptionId);
     const prescription = await db.query("SELECT * FROM health_center_prescription p JOIN health_center_doctor d on p.doctor_id_id=d.id WHERE p.id=$1", [prescriptionId]);
     const medicines = await db.query("SELECT p.*,m.brand_name FROM health_center_prescribed_medicine p JOIN health_center_medicine m ON p.medicine_id_id=m.id WHERE prescription_id_id=$1", [prescriptionId]);
     // console.log(prescription.rows);
@@ -451,7 +542,7 @@ app.get('/prescription/:id', async (req, res) => {
 
 app.post('/update-medicine', async (req, res) => {
   const { prescription_id, brand_name, manufacturer_name, pack_size_label, quantity, days, times } = req.body;
-  console.log(req.body);
+  // console.log(req.body);
   try {
     const result1 = await db.query('SELECT id FROM health_center_medicine WHERE brand_name = $1 AND manufacturer_name=$2 AND pack_size_label=$3', [brand_name,manufacturer_name,pack_size_label]);
     const medicine_id = result1.rows[0].id;
@@ -487,7 +578,7 @@ app.post('/prescribed_medicine/:id', async (req, res) => {
 
 app.get('/search-prescriptions', async (req, res) => {
   const { term, field } = req.query;
-  console.log(req.query);
+  // console.log(req.query);
   if (!term || !field) {
     return res.status(400).json({ error: 'Missing search term or field' });
   }
@@ -497,8 +588,8 @@ app.get('/search-prescriptions', async (req, res) => {
 
   try {
     const result = await db.query(query, values);
-    console.log("hello");
-    console.log(result.rows);
+    // console.log("hello");
+    // console.log(result.rows);
     res.json(result.rows);
   } catch (err) {
     console.error('Error executing query:', err);
@@ -532,7 +623,7 @@ app.get('/total-patients-today', async (req, res) => {
     `;
     const result = await db.query(query, [startOfDay, endOfDay]);
     const totalPatients = result.rows[0].total_patients;
-    console.log(totalPatients);
+    // console.log(totalPatients);
     res.json({ totalPatients });
   } catch (error) {
     console.error('Error fetching total patients today:', error);
@@ -796,92 +887,6 @@ app.get('/doctors', async (req, res) => {
   }
 });
 
-
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
-// app.use(
-//   session({
-//     resave: false,
-//     saveUninitialized: true,
-//     cookie:{
-//       maxAge:1000*60*60*24,
-//     }
-//   })
-// );
-// app.use(passport.initialize());
-// app.use(passport.session());
-// app.get("/", (req, res) => {
-//   res.render("home.ejs");
-// });
-
-app.get("/", (req, res) => {
-  res.render("login.ejs");
-});
-
-// app.get("/register", (req, res) => {
-//   res.render("register.ejs");
-// });
-
-// app.get("/logout", (req, res) => {
-//   req.logout(function (err) {
-//     if (err) {
-//       return next(err);
-//     }
-//     res.redirect("/");
-//   });
-// });
-
-//TODO: Add a get route for the submit button
-//Think about how the logic should work with authentication.
-
-
-// app.post(
-//   "/login",
-//   passport.authenticate("local", {
-//     successRedirect: "/secrets",
-//     failureRedirect: "/login",
-//   })
-// );
-
-
-// passport.use(
-//   "local",
-//   new Strategy(async function verify(username, password, cb) {
-//     try {
-//       const result = await db.query("SELECT * FROM users WHERE email = $1 ", [
-//         username,
-//       ]);
-//       if (result.rows.length > 0) {
-//         const user = result.rows[0];
-//         const storedHashedPassword = user.password;
-//         bcrypt.compare(password, storedHashedPassword, (err, valid) => {
-//           if (err) {
-//             console.error("Error comparing passwords:", err);
-//             return cb(err);
-//           } else {
-//             if (valid) {
-//               return cb(null, user);
-//             } else {
-//               return cb(null, false);
-//             }
-//           }
-//         });
-//       } else {
-//         return cb("User not found");
-//       }
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   })
-// );
-
-
-// passport.serializeUser((user, cb) => {
-//   cb(null, user);
-// });
-
-// passport.deserializeUser((user, cb) => {
-//   cb(null, user);
-// });

@@ -890,3 +890,34 @@ async function fetchmedicinewithexpiry() {
 }
 
 document.addEventListener('DOMContentLoaded', fetchmedicinewithexpiry);
+
+
+// async function fetchDoctorSchedule() {
+//   try {
+//     const response = await fetch('/doctor-schedule');
+//     if (response.ok) {
+//       const schedule = await response.json();
+//       const scheduleContainer = document.getElementById('doctor-schedule');
+//       scheduleContainer.innerHTML = ''; // Clear existing content
+//       if (schedule.length > 0) {
+//         schedule.forEach(entry => {
+//           const div = document.createElement('div');
+//           div.classList.add('schedule-entry');
+//           div.innerHTML = `
+//             <p>Doctor: ${entry.name}</p>
+//             <p>Start Time: ${entry.start_time}</p>
+//             <p>End Time: ${entry.end_time}</p>
+//             `;
+//             scheduleContainer.appendChild(div);
+//           });
+//       } else {
+//         scheduleContainer.innerHTML = '<p>No doctors are scheduled for today.</p>';
+//       }
+//     } else {
+//       document.getElementById('doctor-schedule').innerHTML = 'Error fetching schedule';
+//     }
+//   } catch (error) {
+//     document.getElementById('doctor-schedule').innerHTML = 'Error fetching schedule';
+//   }
+// }
+// document.addEventListener('DOMContentLoaded', fetchDoctorSchedule);
